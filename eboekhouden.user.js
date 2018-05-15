@@ -14,7 +14,6 @@
  * - Make hidden notion more compact (hide header or change to a completely different row)
  * - 
  */
- console.log('test');
 
 function checkChanged() {
   frame = $(document.getElementById('mainframe').contentDocument);
