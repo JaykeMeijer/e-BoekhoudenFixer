@@ -12,9 +12,8 @@
  * - Add functionality to easily hide all but today
  * - See if state can be remembered
  * - Make hidden notion more compact (hide header or change to a completely different row)
- * - 
+ * - Add button to show just the current week
  */
- 
 
 function checkChanged() {
   frame = $(document.getElementById('mainframe').contentDocument);
