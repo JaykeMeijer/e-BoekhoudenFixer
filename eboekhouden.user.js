@@ -44,7 +44,7 @@ function addStyle(head, css) {
 }
 
 function preparePage(frame) {
-    addStyle(frame.find('head').get(0), '.tROW {border-bottom: 2px solid #AAAAAA; font-weight: bold;} .hidebutton {font-family: "Lucida Console", Monaco, monospace} .hidebutton:hover {color: #BADA55; cursor: pointer}');  
+  addStyle(frame.find('head').get(0), '.tROW {border-bottom: 2px solid #AAAAAA; font-weight: bold;} .hidebutton {font-family: "Lucida Console", Monaco, monospace} .hidebutton:hover {color: #BADA55; cursor: pointer}');  
   table = frame.find('body > center > table');
  
   if (checkPage(table)) {
@@ -55,11 +55,11 @@ function preparePage(frame) {
 }
 
 function getTableBody(table) {
-  return table.children('tbody').children('tr').eq(2).find('table > tbody');
+  return table.children('tbody').children('tr').eq(2).find('table > tbody:contains("Datum")');
 }
 
 function getRows(table) {
-  return table.children('tbody').children('tr').eq(2).find('table > tbody > tr');
+  return table.children('tbody').children('tr').eq(2).find('table > tbody:contains("Datum") > tr');
 }
 
 function toggleRows(element, rows) {
@@ -85,42 +85,42 @@ function runRedesign(table) {
   parent = getTableBody(table);
   rows = getRows(table);
   header = rows[0];
- 
+
   current_date = rows[1].childNodes[2].innerHTML;
- 
+
   total_hours = 0.0;
   insertables = [];
   for(var i=1; i < rows.length; i++) {
-      d = rows[i].childNodes[2].innerHTML;
+    d = rows[i].childNodes[2].innerHTML;
     t = parseFloat(rows[i].childNodes[6].innerHTML.replace(',', '.'));
-    
+
     if (d != current_date) {      
       newRow = $('<tr style="line-height:21px; margin-bottom:5px;">' +
-                   '<td class="cROW tROW"></td>' +
-                   '<td class="cROW tROW"></td>' +
-                   '<td class="cROW tROW"></td>' +
-                   '<td class="cROW tROW"></td>' +
-                   '<td class="cROW tROW"></td>' +
-                   '<td class="cROW tROW" style="text-align:right">Totaal ' + current_date + ':</td>' +
-                   '<td class="cROW tROW" style="text-align:right">' + total_hours.toFixed(2).replace('.', ',') + '</td>' +
+                 '<td class="cROW tROW"></td>' +
+                 '<td class="cROW tROW"></td>' +
+                 '<td class="cROW tROW"></td>' +
+                 '<td class="cROW tROW"></td>' +
+                 '<td class="cROW tROW"></td>' +
+                 '<td class="cROW tROW" style="text-align:right">Totaal ' + current_date + ':</td>' +
+                 '<td class="cROW tROW" style="text-align:right">' + total_hours.toFixed(2).replace('.', ',') + '</td>' +
                  '</tr>');
-      insertables.push([i - 1, newRow]);//$(rows[i]).after(newRow);
-    
+      insertables.push([i - 1, newRow]);
+
       current_date = d;
       total_hours = t;
     } else {
       total_hours += t;
     }
   }
- 
+
   /* Insert headers and total rows */
   for(var i = 0; i < insertables.length; i++) {
     if (i + 1 < insertables.length) {
-        $(rows[insertables[i][0]]).after($(header).clone());
+      $(rows[insertables[i][0]]).after($(header).clone());
     }
     $(rows[insertables[i][0]]).after(insertables[i][1]);
   }
- 
+
   /* Create collapsable days */
   rows = getRows(table);
   prev_header = 0;
@@ -128,7 +128,7 @@ function runRedesign(table) {
     if (rows[i].childNodes[3].innerHTML.indexOf('<b>Datum</b>') > -1 || i == rows.length - 1) {
       rows[prev_header].childNodes[1].classList.add('hidebutton');
       rows[prev_header].childNodes[1].innerHTML = '[-]';
-      
+
       var a = prev_header + 1;
       var b = i - 2;
       rows[prev_header].childNodes[1].setAttribute("data-start", a);
@@ -136,7 +136,7 @@ function runRedesign(table) {
       rows[prev_header].childNodes[1].onclick = function() {
         toggleRows(this, rows);
       }
-      
+
       prev_header = i;
     }
   }
