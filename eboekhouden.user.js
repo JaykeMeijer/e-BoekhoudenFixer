@@ -170,6 +170,7 @@ function runRedesignOverzicht(table) {
   if (frm.find('.clickable').length == 0) {  // Hack to prevent double addition
     addCurrentButtons();
     addHoursCurrentDayButton();
+    addCollapsableSearch();
   }
 }
 
@@ -192,20 +193,23 @@ function addCurrentButtons() {
 function addHoursCurrentDayButton() {
   frm = getFrame().find('#frm').first();
   sib = frm.next().next();
+  sib.find('img').first().css('margin-top', '20px');
   link = sib.get()[0].cloneNode();
   link.setAttribute('id', 'addForToday');
   link.setAttribute('href', link.href + '&SELECTDAY=' + getDateString(new Date()));
   link.innerHTML = 'Toevoegen voor vandaag';
   sib.after(link);
 }
-  
-function addHoursToDay(element) {
-  date = element.target.dataset.date;
-  link = getFrame().find('center').first().children('a').first().get()[0];
-  link.setAttribute('href', link.href + '&SELECTDAY=' + date);
-  link.click();
-}
 
+function addCollapsableSearch() {
+  frm = getFrame().find('#frm');
+  elem = $('<td id="hidesearch" class="hidebutton">[+]</td>');
+  elem.click(function() {toggleSearch(this);});
+  frm.children().first().find('table').first().find('tbody > tr').prepend(elem);
+  
+  $(frm.find('table > tbody').first().children('tr')[1]).hide();
+  frm.children('table').eq(1).hide();
+}
 
 /* ======= User-triggered scripts ======= */
 function toggleRows(element, rows) {
@@ -220,10 +224,25 @@ function toggleRows(element, rows) {
     }
   } else {
     // Show
-    element.innerHTML = '[-]'
+    element.innerHTML = '[-]';
     for (var i = start; i <= stop; i++) {
       $(rows[i]).show();
     }
+  }
+}
+
+function toggleSearch(element) {
+  frm = getFrame().find('#frm');
+  if (element.innerHTML == '[-]') {
+    // Hide
+    element.innerHTML = '[+]';
+    $(frm.find('table > tbody').first().children('tr')[1]).hide();
+    frm.children('table').eq(1).hide();
+  } else {
+    // Show
+    element.innerHTML = '[-]';
+    $(frm.find('table > tbody').first().children('tr')[1]).show();
+    frm.children('table').eq(1).show();
   }
 }
 
@@ -267,6 +286,13 @@ function selectDateRange(from, to) {
   van.get()[0].value = getDateString(from);
   tot.get()[0].value = getDateString(to);
   rb = frm.find('#submit1').get()[0].click();
+}
+  
+function addHoursToDay(element) {
+  date = element.target.dataset.date;
+  link = getFrame().find('center').first().children('a').first().get()[0];
+  link.setAttribute('href', link.href + '&SELECTDAY=' + date);
+  link.click();
 }
 
 
