@@ -4,12 +4,8 @@ Greasemonkey script to make the e-Boekhouden overview page more useful. By defau
 
 - Entries grouped by day, and showing total of hours per day
 - Allow a day to be minimized, hiding the entries of that day
-
-The following features are to be added:
-
-- Button to show just current week, instead of month
-- Button to minimize all except current day
-- Maybe: Button per day to add entries for that day
+- Shortcut buttons to show just current day, week and month
+- Button per day to add entries for that day
 
 ## Installation
 
