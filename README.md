@@ -6,6 +6,7 @@ Greasemonkey script to make the e-Boekhouden overview page more useful. By defau
 - Allow a day to be minimized, hiding the entries of that day
 - Shortcut buttons to show just current day, week and month
 - Button per day to add entries for that day
+- Allow timeframe selection box at the top to be minimized, as this takes up almost half of the page
 
 ## Installation
 
