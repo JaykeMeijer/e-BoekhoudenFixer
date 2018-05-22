@@ -10,7 +10,7 @@ Greasemonkey script to make the e-Boekhouden overview page more useful. By defau
 
 ## Installation
 
-First, install GreaseMonkey for [FireFox](https://addons.mozilla.org/en-US/firefox/addon/greasemonkey/) or TamperMonkey for [Chrome](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo?hl=en) or [Safari](https://tampermonkey.net/?browser=safari).
+First, install GreaseMonkey for [FireFox](https://addons.mozilla.org/en-US/firefox/addon/greasemonkey/) or TamperMonkey for [FireFox](https://addons.mozilla.org/en-US/firefox/addon/tampermonkey/), [Chrome](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo?hl=en) or [Safari](https://tampermonkey.net/?browser=safari).
 
 Next, click [here](https://github.com/JaykeMeijer/e-BoekhoudenFixer/raw/master/eboekhouden.user.js).
 
