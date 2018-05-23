@@ -7,6 +7,7 @@ Greasemonkey script to make the e-Boekhouden overview page more useful. By defau
 - Shortcut buttons to show just current day, week and month
 - Button per day to add entries for that day
 - Allow timeframe selection box at the top to be minimized, as this takes up almost half of the page
+- Automatically select '2. Investering' as activiteit, as we don't use the other anymore
 
 ## Installation
 
