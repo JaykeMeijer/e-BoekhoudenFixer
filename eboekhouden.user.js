@@ -87,18 +87,123 @@ function buildPage(center) {
   if (checkPageOverzicht(table)) {
     runRedesignOverzicht(table);
   } else if (checkPageToevoegen(form)) {
-    // Check if date select in URL. If so, set it as date
-    var url = new URL(getFrame().context.URL);
-    var date = url.searchParams.get("SELECTDAY");
-    if (date != null) {
-      form.find('#txtDatum').first().get()[0].value = date;
-    }
-
-    // Force set to Investering (second option) by default
-    form.find('#SelActiviteit option').prop('selected', true).trigger('change');
+    runRedesignToevoegen(form);
   } else {
-    // Not overview page, ignore
+    // Not overview or add page, ignore
   }
+}
+
+
+/* ======= Perform changes to 'Toevoegen' page ======= */
+function runRedesignToevoegen(form) {
+ 	// Check if date select in URL. If so, set it as date
+  var url = new URL(getFrame().context.URL);
+  var date = url.searchParams.get("SELECTDAY");
+  if (date != null) {
+    form.find('#txtDatum').first().get()[0].value = date;
+  }
+
+  // Force set to Investering (second option) by default
+  form.find('#SelActiviteit option').prop('selected', true).trigger('change'); 
+  
+  // Find opmerkingen for selected project and build quick list
+  buildSuggestionList(form);
+  form.find('#SelProject').get()[0].onchange = function() {
+    getFrame().find('body').find('#quicklist').remove();
+    buildSuggestionList(form);
+  }
+}
+
+
+function buildSuggestionList(form) {
+  // Prevent running multiple times
+  var body = getFrame().find('body');
+  if (body.find('#quicklist').length > 0) {
+    return;
+  }
+  
+  console.log('Finding selected project');
+  var project = form.find('#SelProject option:selected').text();
+  var parsed = retrieveOpmerkingen(project);
+  
+  // Create list sorted by regularity
+  var list = [];
+  for (var opmerking in parsed) {
+    list.push([opmerking, parsed[opmerking].times_used, parsed[opmerking].last_used]);
+  }
+  
+  list.sort(function(a, b) {
+    return b[2] - a[2];
+  });  
+  
+  var obj = $('<div id="quicklist"></div>');
+  body.append($(obj));
+
+  var storeCurrent = $('<div class="quicklist_entry"></div>');
+  storeCurrent.append('<i>Sla huidige opmerking op</i>');
+  obj.append(storeCurrent);
+  storeCurrent.get()[0].onclick = function() {
+    storeCurrentOpmerking(form, project);
+  }
+  
+  
+  for (var i=0; i < list.length; i++) {
+  	var e = $('<div class="quicklist_entry" id="ql_entry_' + i + '"></div>');
+    e.text(list[i][0]);
+    obj.append(e);
+    e.get()[0].onclick = function() {
+      insertOpmerking(form, project, this.innerText);
+    }
+  }
+}
+
+function insertOpmerking(form, project, opmerking) {
+  // Re-store so used counter and last used are updated
+  storeOpmerking(project, opmerking);
+  
+  // Insert into opmerkingen field
+  form.find('#txtOpmerkingen').val(opmerking);
+}
+
+function storeCurrentOpmerking(form, project) {
+  // Get opmerking
+  var opmerking = form.find('#txtOpmerkingen').val();
+  
+  // Store
+  storeOpmerking(project, opmerking);
+  
+  // Rebuild list to reflect change
+  getFrame().find('body').find('#quicklist').remove();
+  buildSuggestionList(form);
+}
+
+function retrieveOpmerkingen(project) {
+  var json = localStorage['opmerkingen_' + project];
+  
+  if (json == undefined) {
+		return null;
+  }
+  return JSON.parse(json);
+}
+
+function storeOpmerking(project, opmerking) {
+  var current = retrieveOpmerkingen(project);
+  
+  if (current == undefined) {
+   	current = {};
+  }
+
+  if (opmerking in current) {
+    current[opmerking]['times_used']++;
+    current[opmerking]['last_used'] = Date.now();
+  } else {
+    current[opmerking] = {
+      'times_used': 1,
+      'last_used': Date.now()
+    }
+  }
+
+  localStorage.setItem('opmerkingen_' + project, JSON.stringify(current));
 }
 
 
@@ -258,3 +363,51 @@ function showToday() {
   var today_s = getDateString(today);
   selectDateRange(today, today);
 }
+
+function showThisWeek() {
+  function getMonday(d) {
+    d = new Date(d);
+    var day = d.getDay();
+    var diff = d.getDate() - day + (day == 0 ? -6:1);
+    return new Date(d.setDate(diff));
+  }
+
+  var today = new Date();
+  var monday = getMonday(today);
+  var sunday = new Date(monday);
+  sunday.setDate(sunday.getDate() + 6);
+
+	selectDateRange(monday, sunday);
+}
+
+function showThisMonth() {
+  var frm = getFrame().find('#frm');
+  frm.find('input').filter('[value=M]').get()[0].click();
+  frm.find('#submit1').get()[0].click();
+}
+
+function selectVrije() {
+  var frm = getFrame().find('#frm');
+  frm.find('input').filter('[value=V]').get()[0].click();
+}
+
+function selectDateRange(from, to) {
+  selectVrije();
+  var frm = getFrame().find('#frm');
+  var van = frm.find('#txtDatumVan').first();
+  var tot = frm.find('#txtDatumTot').first();
+  van.get()[0].value = getDateString(from);
+  tot.get()[0].value = getDateString(to);
+  frm.find('#submit1').get()[0].click();
+}
+
+function addHoursToDay(element) {
+  var date = element.target.dataset.date;
+  var link = getFrame().find('center').first().children('a').first().get()[0];
+  link.setAttribute('href', link.href + '&SELECTDAY=' + date);
+  link.click();
+}
+
+
+/* Start checking */
+setInterval(checkChanged, 100);
