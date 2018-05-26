@@ -63,7 +63,7 @@ function addStyle(head, css) {
 function waitForPage(frame) {
   var center = getFrame().find('body > center');
     // TODO: fix check for Chrome
-  if (center.length == 0 || center.children('table').length == 0) {
+  if (center.length == 0 || (center.children('table').length == 0 && center.children('form').length == 0)) {
     setTimeout(waitForPage, 100);
   } else {
     buildPage(center);
