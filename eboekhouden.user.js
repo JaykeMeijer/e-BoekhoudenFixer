@@ -22,16 +22,16 @@ function getRows(table) {
 
 /* ======= Checking if execution is required logic ======= */
 function checkChanged() {
-  frame = getFrame();
-  hidden = frame.get()[0].getElementById('changedByJayke');
+  var frame = getFrame();
+  var hidden = frame.get()[0].getElementById('changedByJayke');
   if (hidden != null) {
     /* No change, ignore */
   } else {
     /* Add detector used to detect frame change */
-    element = $('<div id="changedByJayke"></div>');
+    var element = $('<div id="changedByJayke"></div>');
     element.css('display', 'none');
     frame.find('body').append(element);
-    
+
     /* Add CSS */
     addStyle(frame.find('head').get(0),
            '.tROW {border-bottom: 2px solid #AAAAAA; font-weight: bold; padding-bottom: 20px;} ' +
@@ -40,15 +40,18 @@ function checkChanged() {
            '.add_hours:hover {color: #BADA55; cursor: pointer} ' +
            '.clickable {text-decoration: underline;} ' +
            '.clickable:hover {color:#BADA55; cursor:pointer} ' +
-           '#addForToday {margin-left: 10px;} ' + 
+           '#addForToday {margin-left: 10px;} ' +
            '#addForToday:hover {color:#BADA55; cursor:pointer}');
-    
+
     /* Add our functionality to the page*/
     waitForPage();
   }
 }
 
 function addStyle(head, css) {
+  if (head == undefined) {
+    return;
+  }
   var style;
   style = document.createElement('style');
   style.type = 'text/css';
@@ -58,8 +61,9 @@ function addStyle(head, css) {
 
 /* Wait for page content to load, then trigger page rebuild */
 function waitForPage(frame) {
-  center = getFrame().find('body > center');
-  if (center.length == 0) {
+  var center = getFrame().find('body > center');
+    // TODO: fix check for Chrome
+  if (center.length == 0 || (center.children('table').length == 0 && center.children('form').length == 0)) {
     setTimeout(waitForPage, 100);
   } else {
     buildPage(center);
@@ -67,25 +71,27 @@ function waitForPage(frame) {
 }
 
 function checkPageOverzicht(table) {
-  header = table.find('table > tbody > tr > td > font');
+  var header = table.find('font').first();
   return header.text().indexOf('GEREGISTREERDE') > -1;
 }
 
 function checkPageToevoegen(form) {
-  header = form.find('center > table > tbody > tr > td').find('font');
+  var header = form.find('center > table > tbody > tr > td').find('font');
   return header.text().indexOf('TIJDREGISTRATIE') > -1;
 }
 
 function buildPage(center) {
-  table = center.children('table');
-  form = center.children('form');
+    console.log('bp');
+  var table = center.children('table');
+  var form = center.children('form');
 
   if (checkPageOverzicht(table)) {
     runRedesignOverzicht(table);
   } else if (checkPageToevoegen(form)) {
+      console.log('cpt');
     // Check if date select in URL. If so, set it as date
-    url = new URL(getFrame().context.URL);
-    date = url.searchParams.get("SELECTDAY");
+    var url = new URL(getFrame().context.URL);
+    var date = url.searchParams.get("SELECTDAY");
     if (date != null) {
       form.find('#txtDatum').first().get()[0].value = date;
     }
@@ -100,30 +106,31 @@ function buildPage(center) {
 
 /* ======= Perform changes to 'Overzicht' page ======= */
 function runRedesignOverzicht(table) {
-  parent = getTableBody(table);
-  rows = getRows(table);
-  header = rows[0];
+  var parent = getTableBody(table);
+  var rows = getRows(table);
+  var header = rows[0];
 
   if (rows.length > 1) {
-    current_date = rows[1].childNodes[2].innerHTML;
+    var current_date = rows[1].childNodes[2].innerHTML;
 
-    total_hours = 0.0;
-    insertables = [];
+    var total_hours = 0.0;
+    var insertables = [];
 
 
     for(var i=1; i < rows.length; i++) {
-      d = rows[i].childNodes[2].innerHTML;
-      t = parseFloat(rows[i].childNodes[6].innerHTML.replace(',', '.'));
+      if (rows[i].childNodes[2] == undefined || rows[i].childNodes[6] == undefined) {return};
+      var d = rows[i].childNodes[2].innerHTML;
+      var t = parseFloat(rows[i].childNodes[6].innerHTML.replace(',', '.'));
 
-      if (d != current_date) {      
-        newRow = $('<tr style="line-height:21px; margin-bottom:5px;">' +
-                   '<td class="cROW tROW"></td>' +
-                   '<td class="cROW tROW add_hours" data-date="' + current_date +'" colspan=2>+ Uren toevoegen</td>' +
-                   '<td class="cROW tROW"></td>' +
-                   '<td class="cROW tROW"></td>' +
-                   '<td class="cROW tROW" style="text-align:right">Totaal ' + current_date + ':</td>' +
-                   '<td class="cROW tROW" style="text-align:right">' + total_hours.toFixed(2).replace('.', ',') + '</td>' +
-                   '</tr>');
+      if (d != current_date) {
+        var newRow = $('<tr style="line-height:21px; margin-bottom:5px;">' +
+                       '<td class="cROW tROW"></td>' +
+                       '<td class="cROW tROW add_hours" data-date="' + current_date +'" colspan=2>+ Uren toevoegen</td>' +
+                       '<td class="cROW tROW"></td>' +
+                       '<td class="cROW tROW"></td>' +
+                       '<td class="cROW tROW" style="text-align:right">Totaal ' + current_date + ':</td>' +
+                       '<td class="cROW tROW" style="text-align:right">' + total_hours.toFixed(2).replace('.', ',') + '</td>' +
+                       '</tr>');
         insertables.push([i - 1, newRow]);
 
         current_date = d;
@@ -143,13 +150,14 @@ function runRedesignOverzicht(table) {
 
     /* Add function to headers */
     getFrame().find('.add_hours').click(addHoursToDay);
-  
+
     /* Create collapsable days */
     rows = getRows(table);
-    prev_header = 0;
+    var prev_header = 0;
     for(var i=1; i < rows.length; i++) {
       if (rows[i].childNodes[3].innerHTML.indexOf('<b>Datum</b>') > -1 || i == rows.length - 1) {
         rows[prev_header].childNodes[1].classList.add('hidebutton');
+
         rows[prev_header].childNodes[1].innerHTML = '[-]';
 
         var a = prev_header + 1;
@@ -164,9 +172,9 @@ function runRedesignOverzicht(table) {
       }
     }
   }
-  
+
   /* Add quick buttons to select current day, week and month, as well as adding hours for today */
-  frm = getFrame().find('#frm');
+  var frm = getFrame().find('#frm');
   if (frm.find('.clickable').length == 0) {  // Hack to prevent double addition
     addCurrentButtons();
     addHoursCurrentDayButton();
@@ -179,7 +187,8 @@ function getDateString(d) {
 }
 
 function addCurrentButtons() {
-  frm = getFrame().find('#frm');
+  var frame = getFrame();
+  var frm = frame.find('#frm');
   frm.children().first().find('table').first().find('tbody > tr').append(
     '<td class="clickable" id="showtoday">Vandaag</td>' +
     '<td class="clickable" id="showthisweek">Deze week</td>' +
@@ -191,10 +200,10 @@ function addCurrentButtons() {
 }
 
 function addHoursCurrentDayButton() {
-  frm = getFrame().find('#frm').first();
-  sib = frm.next().next();
+  var frm = getFrame().find('#frm').first();
+  var sib = frm.next().next();
   sib.find('img').first().css('margin-top', '20px');
-  link = sib.get()[0].cloneNode();
+  var link = sib.get()[0].cloneNode();
   link.setAttribute('id', 'addForToday');
   link.setAttribute('href', link.href + '&SELECTDAY=' + getDateString(new Date()));
   link.innerHTML = 'Toevoegen voor vandaag';
@@ -202,11 +211,11 @@ function addHoursCurrentDayButton() {
 }
 
 function addCollapsableSearch() {
-  frm = getFrame().find('#frm');
-  elem = $('<td id="hidesearch" class="hidebutton">[+]</td>');
+  var frm = getFrame().find('#frm');
+  var elem = $('<td id="hidesearch" class="hidebutton">[+]</td>');
   elem.click(function() {toggleSearch(this);});
   frm.children().first().find('table').first().find('tbody > tr').prepend(elem);
-  
+
   $(frm.find('table > tbody').first().children('tr')[1]).hide();
   frm.children('table').eq(1).hide();
 }
@@ -215,7 +224,7 @@ function addCollapsableSearch() {
 function toggleRows(element, rows) {
   var start = element.dataset.start;
   var stop = element.dataset.stop;
- 
+
   if (element.innerHTML == '[-]') {
     // Hide
     element.innerHTML = '[+]';
@@ -247,8 +256,8 @@ function toggleSearch(element) {
 }
 
 function showToday() {
-  today = new Date();
-  today_s = getDateString(today);
+  var today = new Date();
+  var today_s = getDateString(today);
   selectDateRange(today, today);
 }
 
@@ -260,37 +269,38 @@ function showThisWeek() {
     return new Date(d.setDate(diff));
   }
 
-  today = new Date();
-  monday = getMonday(today);
-  sunday = new Date(monday);
+  var today = new Date();
+  var monday = getMonday(today);
+  var sunday = new Date(monday);
   sunday.setDate(sunday.getDate() + 6);
-  
-	selectDateRange(monday, sunday);  
+
+	selectDateRange(monday, sunday);
 }
 
 function showThisMonth() {
-  frm = getFrame().find('#frm');
+  var frm = getFrame().find('#frm');
   frm.find('input').filter('[value=M]').get()[0].click();
-  rb = frm.find('#submit1').get()[0].click();
+  frm.find('#submit1').get()[0].click();
 }
 
 function selectVrije() {
-  frm = getFrame().find('#frm');
+  var frm = getFrame().find('#frm');
   frm.find('input').filter('[value=V]').get()[0].click();
 }
 
 function selectDateRange(from, to) {
   selectVrije();
-  van = frm.find('#txtDatumVan').first();
-  tot = frm.find('#txtDatumTot').first();
+  var frm = getFrame().find('#frm');
+  var van = frm.find('#txtDatumVan').first();
+  var tot = frm.find('#txtDatumTot').first();
   van.get()[0].value = getDateString(from);
   tot.get()[0].value = getDateString(to);
-  rb = frm.find('#submit1').get()[0].click();
+  frm.find('#submit1').get()[0].click();
 }
-  
+
 function addHoursToDay(element) {
-  date = element.target.dataset.date;
-  link = getFrame().find('center').first().children('a').first().get()[0];
+  var date = element.target.dataset.date;
+  var link = getFrame().find('center').first().children('a').first().get()[0];
   link.setAttribute('href', link.href + '&SELECTDAY=' + date);
   link.click();
 }
