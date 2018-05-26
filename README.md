@@ -15,4 +15,4 @@ First, install GreaseMonkey for [FireFox](https://addons.mozilla.org/en-US/firef
 
 Next, click [here](https://github.com/JaykeMeijer/e-BoekhoudenFixer/raw/master/eboekhouden.user.js).
 
-This has for now only been tested on FireFox.
+The master branch of this repo has been tested on Firefox & Chrome on Windows, and FireFox on Linux.
