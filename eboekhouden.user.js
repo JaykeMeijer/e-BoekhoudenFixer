@@ -81,14 +81,12 @@ function checkPageToevoegen(form) {
 }
 
 function buildPage(center) {
-    console.log('bp');
   var table = center.children('table');
   var form = center.children('form');
 
   if (checkPageOverzicht(table)) {
     runRedesignOverzicht(table);
   } else if (checkPageToevoegen(form)) {
-      console.log('cpt');
     // Check if date select in URL. If so, set it as date
     var url = new URL(getFrame().context.URL);
     var date = url.searchParams.get("SELECTDAY");
@@ -260,52 +258,3 @@ function showToday() {
   var today_s = getDateString(today);
   selectDateRange(today, today);
 }
-
-function showThisWeek() {
-  function getMonday(d) {
-    d = new Date(d);
-    var day = d.getDay();
-    var diff = d.getDate() - day + (day == 0 ? -6:1);
-    return new Date(d.setDate(diff));
-  }
-
-  var today = new Date();
-  var monday = getMonday(today);
-  var sunday = new Date(monday);
-  sunday.setDate(sunday.getDate() + 6);
-
-	selectDateRange(monday, sunday);
-}
-
-function showThisMonth() {
-  var frm = getFrame().find('#frm');
-  frm.find('input').filter('[value=M]').get()[0].click();
-  frm.find('#submit1').get()[0].click();
-}
-
-function selectVrije() {
-  var frm = getFrame().find('#frm');
-  frm.find('input').filter('[value=V]').get()[0].click();
-}
-
-function selectDateRange(from, to) {
-  selectVrije();
-  var frm = getFrame().find('#frm');
-  var van = frm.find('#txtDatumVan').first();
-  var tot = frm.find('#txtDatumTot').first();
-  van.get()[0].value = getDateString(from);
-  tot.get()[0].value = getDateString(to);
-  frm.find('#submit1').get()[0].click();
-}
-
-function addHoursToDay(element) {
-  var date = element.target.dataset.date;
-  var link = getFrame().find('center').first().children('a').first().get()[0];
-  link.setAttribute('href', link.href + '&SELECTDAY=' + date);
-  link.click();
-}
-
-
-
-/* Start checking */
-setInterval(checkChanged, 100);
