@@ -35,13 +35,30 @@ function checkChanged() {
     /* Add CSS */
     addStyle(frame.find('head').get(0),
            '.tROW {border-bottom: 2px solid #AAAAAA; font-weight: bold; padding-bottom: 20px;} ' +
+
            '.hidebutton {font-family: "Lucida Console", Monaco, monospace} ' +
            '.hidebutton:hover {color: #BADA55; cursor: pointer} ' +
+
            '.add_hours:hover {color: #BADA55; cursor: pointer} ' +
+
            '.clickable {text-decoration: underline;} ' +
            '.clickable:hover {color:#BADA55; cursor:pointer} ' +
+
            '#addForToday {margin-left: 10px;} ' +
-           '#addForToday:hover {color:#BADA55; cursor:pointer}');
+           '#addForToday:hover {color:#BADA55; cursor:pointer}' +
+
+           '#quicklist {border-top: 1px solid #f47300; border-bottom: 1px solid #f47300; font-family: "Ubuntu", "Lucida Sans", "Lucida Sans Regular", "Lucida Grande", "Lucida Sans Unicode", Geneva, Verdana, sans-serif;}' +
+           '#quicklist .header {margin: 5px; color: #f47300; font-size:14px;}' +
+           '#quicklist table {width: calc(100% - 40px); border-spacing: 0; border-collapse: collapse; table-layout: auto; margin: 20px;}' +
+           '#quicklist tr:nth-child(even){background-color: #f2f2f2;}' +
+           '#quicklist table td.opmerking {}' +
+           '#quicklist table td.fwidth {width: 100px;}' +
+           '#quicklist table .headerRow {font-weight: bold; background-color: #c2d194}' +
+           '#quicklist table .headerRow td {cursor: pointer}' +
+           '#quicklist td {padding: 5px; border: 1px solid #f47300;}' +
+           '#quicklist .quicklist_entry:hover {cursor: pointer; background-color:#ddd;}' +
+           '#quicklist #storeCurrent:hover {color: #BADA55; cursor: pointer}'
+    );
 
     /* Add our functionality to the page*/
     waitForPage();
@@ -115,12 +132,21 @@ function runRedesignToevoegen(form) {
 }
 
 
+function dateToString(date) {
+  var str = date.getDate() + '-' + (date.getMonth() + 1) + '-' + date.getFullYear() + ' ' + ("0" + date.getHours()).slice(-2) + ':' + ("0" + date.getMinutes()).slice(-2);
+  return str;
+}
+
+
 function buildSuggestionList(form) {
   // Prevent running multiple times
-  var body = getFrame().find('body');
-  if (body.find('#quicklist').length > 0) {
+  var center = getFrame().find('body > center');
+  if (center.find('#quicklist').length > 0) {
     return;
   }
+  
+  // Delete useless <br> from form
+  form.find('center > br').remove();
   
   console.log('Finding selected project');
   var project = form.find('#SelProject option:selected').text();
@@ -132,29 +158,67 @@ function buildSuggestionList(form) {
     list.push([opmerking, parsed[opmerking].times_used, parsed[opmerking].last_used]);
   }
   
-  list.sort(function(a, b) {
-    return b[2] - a[2];
-  });  
-  
-  var obj = $('<div id="quicklist"></div>');
-  body.append($(obj));
+  // Sort as desired
+  var sort_col = 0;
+  var pref_col = localStorage['order_opmerking'];
+  if (pref_col != undefined) {
+    sort_col = parseInt(pref_col);
+  }
 
-  var storeCurrent = $('<div class="quicklist_entry"></div>');
-  storeCurrent.append('<i>Sla huidige opmerking op</i>');
-  obj.append(storeCurrent);
-  storeCurrent.get()[0].onclick = function() {
-    storeCurrentOpmerking(form, project);
+  if (sort_col == 0) {
+    list.sort(function(a, b) {
+      var ax = a[0].toLowerCase();
+      var bx = b[0].toLowerCase();
+      if (bx < ax) return 1;
+      if (bx > ax) return -1;
+      return 0;
+    });
+  } else {
+    list.sort(function(a, b) {
+      if (b[sort_col] > a[sort_col]) return 1;
+      if (b[sort_col] < a[sort_col]) return -1;
+      return 0;
+    });
   }
   
+  var obj = $('<div id="quicklist"><div class="header">SNEL OPMERKING INVOEGEN</div></div>');
+  center.append($(obj));
+  
+  var table = $('<table></table>');
+  obj.append(table);
+  var header = $('<tr class="headerRow"></tr>');
+  
+  var c1 = $('<td class="opmerking">Opmerking</td>');
+  header.append(c1);
+  c1.get()[0].onclick = function() {sortOpmerkingen(form, 0);}
+  
+  var c2 = $('<td class="fwidth">Gebruikt</td>');
+  header.append(c2);
+  c2.get()[0].onclick = function() {sortOpmerkingen(form, 1);}
+  
+  var c3 = $('<td class="fwidth">Laatst gebruikt</td></th>');
+  header.append(c3);
+  c3.get()[0].onclick = function() {sortOpmerkingen(form, 2);}
+
+  table.append(header);
   
   for (var i=0; i < list.length; i++) {
-  	var e = $('<div class="quicklist_entry" id="ql_entry_' + i + '"></div>');
-    e.text(list[i][0]);
-    obj.append(e);
+    var date = new Date(list[i][2]);
+  	var e = $('<tr class="quicklist_entry" id="ql_entry_' + i + '"></tr>');
+    e.append('<td class="opmerking">' + list[i][0] + '</td><td class="fwidth">' + list[i][1] + 'x</td><td class="fwidth">' + dateToString(date) + '</td>');
+    table.append(e);
     e.get()[0].onclick = function() {
-      insertOpmerking(form, project, this.innerText);
+      insertOpmerking(form, project, $(this).find('td').first().text());
     }
   }
+  
+  var storeCurrent = $('<div id="storeCurrent"></div>');
+  storeCurrent.append('+<i>Sla huidige opmerking op</i>');
+  obj.append(storeCurrent);
+  
+  storeCurrent.get()[0].onclick = function() {
+    storeCurrentOpmerking(form, project);
+  }  
 }
 
 function insertOpmerking(form, project, opmerking) {
@@ -173,7 +237,7 @@ function storeCurrentOpmerking(form, project) {
   storeOpmerking(project, opmerking);
   
   // Rebuild list to reflect change
-  getFrame().find('body').find('#quicklist').remove();
+  getFrame().find('body > center').find('#quicklist').remove();
   buildSuggestionList(form);
 }
 
@@ -206,6 +270,14 @@ function storeOpmerking(project, opmerking) {
   localStorage.setItem('opmerkingen_' + project, JSON.stringify(current));
 }
 
+
+function sortOpmerkingen(form, column) {
+  localStorage.setItem('order_opmerking', column);
+  
+  // Rebuild list to reflect change
+  getFrame().find('body > center').find('#quicklist').remove();
+  buildSuggestionList(form);
+}
 
 /* ======= Perform changes to 'Overzicht' page ======= */
 function runRedesignOverzicht(table) {
