@@ -96,7 +96,7 @@ function buildPage(center) {
     }
 
     // Force set to Investering (second option) by default
-    form.find('#SelActiviteit option').prop('selected', true).trigger('change');
+    //form.find('#SelActiviteit option').prop('selected', true).trigger('change');
   } else {
     // Not overview page, ignore
   }
