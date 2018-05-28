@@ -1,6 +1,7 @@
 // ==UserScript==
 // @name     e-BoekhoudenFixer
 // @version  1
+// @author   Jayke Meijer
 // @grant    GM_addStyle
 // @include https://secure*.e-boekhouden.nl/bh/
 // @require http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js
