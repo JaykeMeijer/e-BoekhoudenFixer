@@ -88,15 +88,12 @@ function waitForPage() {
 }
 
 function buildPage(ptype, center) {
-  console.log('bP');
   var table = center.children('table');
-  console.log(table);
   var form = center.children('form');
-  console.log(form);
 
   switch(ptype) {
     case 'overzicht':
-      setTimeout(function() {runRedesignOverzicht(table)}, 50);
+      runRedesignOverzicht(table);
       break;
     case 'toevoegen':
       runRedesignToevoegen(form);
@@ -126,11 +123,17 @@ function runRedesignOverzicht(table) {
   var header = rows[0];
 
   if (rows.length > 1) {
-    var current_date = rows[1].childNodes[2].innerHTML;
 
+    // Loop while we wait for the data to be filled]);
+    if (rows[rows.length - 1].childNodes[6] == undefined) {
+        console.log('Waiting');
+        setTimeout(function() {runRedesignOverzicht(table)}, 10);
+        return;
+    }
+
+    var current_date = rows[1].childNodes[2].innerHTML;
     var total_hours = 0.0;
     var insertables = [];
-
 
     for(var i=1; i < rows.length; i++) {
       if (rows[i].childNodes[2] == undefined || rows[i].childNodes[6] == undefined) {return};
