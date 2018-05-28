@@ -9,7 +9,12 @@
 
 /* ======= Shortcut getters ======= */
 function getFrame() {
-  return $(document.getElementById('mainframe').contentDocument);
+  var doc = document.getElementById('mainframe');
+  if (doc != null) {
+    return $(doc.contentDocument);
+  } else {
+    return null;
+  }
 }
 
 function getTableBody(table) {
@@ -24,6 +29,9 @@ function getRows(table) {
 /* ======= Checking if execution is required logic ======= */
 function checkChanged() {
   var frame = getFrame();
+  if (frame == null) {
+    return;
+  }
   var hidden = frame.get()[0].getElementById('changedByJayke');
   if (hidden != null) {
     /* No change, ignore */
@@ -61,44 +69,52 @@ function addStyle(head, css) {
 }
 
 /* Wait for page content to load, then trigger page rebuild */
-function waitForPage(frame) {
-  var center = getFrame().find('body > center');
-    // TODO: fix check for Chrome
-  if (center.length == 0 || (center.children('table').length == 0 && center.children('form').length == 0)) {
+function waitForPage() {
+  var frame = getFrame();
+  var center = frame.find('body > center');
+
+  // TODO: fix check for Chrome
+  var url = frame.context.URL;
+  var ptype = (url.includes('uren_ov.asp') ? 'overzicht' : (url.includes('uren.asp') ? 'toevoegen' : 'unknown'));
+  if (ptype == 'unknown') {
+    return;
+  }
+
+  if (center.length == 0 || (ptype == 'overzicht' && center.children('table').length == 0) || (ptype == 'toevoegen' && center.children('form').length == 0)) {
     setTimeout(waitForPage, 100);
   } else {
-    buildPage(center);
+    buildPage(ptype, center);
   }
 }
 
-function checkPageOverzicht(table) {
-  var header = table.find('font').first();
-  return header.text().indexOf('GEREGISTREERDE') > -1;
-}
-
-function checkPageToevoegen(form) {
-  var header = form.find('center > table > tbody > tr > td').find('font');
-  return header.text().indexOf('TIJDREGISTRATIE') > -1;
-}
-
-function buildPage(center) {
+function buildPage(ptype, center) {
+  console.log('bP');
   var table = center.children('table');
+  console.log(table);
   var form = center.children('form');
+  console.log(form);
 
-  if (checkPageOverzicht(table)) {
-    runRedesignOverzicht(table);
-  } else if (checkPageToevoegen(form)) {
-    // Check if date select in URL. If so, set it as date
-    var url = new URL(getFrame().context.URL);
-    var date = url.searchParams.get("SELECTDAY");
-    if (date != null) {
-      form.find('#txtDatum').first().get()[0].value = date;
-    }
+  switch(ptype) {
+    case 'overzicht':
+      setTimeout(function() {runRedesignOverzicht(table)}, 50);
+      break;
+    case 'toevoegen':
+      runRedesignToevoegen(form);
+      break;
+    default:
+      // Not overview page, ignore
+      break;
+  }
+}
 
-    // Force set to Investering (second option) by default
-    //form.find('#SelActiviteit option').prop('selected', true).trigger('change');
-  } else {
-    // Not overview page, ignore
+
+/* ======= Perform changes to 'Toevoegen' page ======= */
+function runRedesignToevoegen(form) {
+  // Check if date select in URL. If so, set it as date
+  var url = new URL(getFrame().context.URL);
+  var date = url.searchParams.get("SELECTDAY");
+  if (date != null) {
+    form.find('#txtDatum').first().get()[0].value = date;
   }
 }
 
