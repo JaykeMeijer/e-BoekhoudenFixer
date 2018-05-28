@@ -7,7 +7,7 @@ Greasemonkey/Tampermonkey script to make the e-Boekhouden more user friendly. By
 - Shortcut buttons to show just current day, week and month
 - Button per day to add entries for that day
 - Allow timeframe selection box at the top to be minimized, as this takes up almost half of the page
-- Automatically select '2. Investering' as activiteit, as we don't use the other anymore
+- ~Automatically select '2. Investering' as activiteit, as we don't use the other anymore~
 
 See the [issues](https://github.com/JaykeMeijer/e-BoekhoudenFixer/issues?q=is%3Aissue+is%3Aopen+label%3A%22new+feature%22) in the GitHub repository for upcoming features
 
