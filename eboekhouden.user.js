@@ -124,7 +124,7 @@ function runRedesignOverzicht(table) {
 
   if (rows.length > 1) {
 
-    // Loop while we wait for the data to be filled]);
+    // Loop while we wait for the data to be filled
     if (rows[rows.length - 1].childNodes[6] == undefined) {
         console.log('Waiting');
         setTimeout(function() {runRedesignOverzicht(table)}, 10);
@@ -300,6 +300,11 @@ function showThisWeek() {
 function showThisMonth() {
   var frm = getFrame().find('#frm');
   frm.find('input').filter('[value=M]').get()[0].click();
+
+  var today = new Date();
+  var month = today.getMonth() + 1;
+
+  frm.find('#SelMaand').find('option').filter('[value=' + month + ']').prop('selected', true);
   frm.find('#submit1').get()[0].click();
 }
 
