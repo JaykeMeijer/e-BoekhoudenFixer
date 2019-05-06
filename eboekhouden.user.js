@@ -24,15 +24,15 @@ function getTableBody(table) {
 }
 
 function getHeader(table) {
-    return table.children('thead').children('tr');
+    return table.children('thead').children('tr')[0];
 }
 
 function getRows(table) {
-  console.log('getRows');
-  console.log(table.children('tbody').children('tr'));
-  console.log('---');
-  //return table.children('tbody').children('tr').eq(2).find('table > tbody:contains("Datum") > tr');
   return table.children('tbody').children('tr');
+}
+
+function getRowsAndHeaders(table) {
+  return $.merge([table.children('thead').children('tr')[0]], table.children('tbody').children('tr, th'));
 }
 
 
@@ -138,13 +138,9 @@ function runRedesignToevoegen(form) {
 
 /* ======= Perform changes to 'Overzicht' page ======= */
 function runRedesignOverzicht(table) {
-  console.log(table);
   var parent = getTableBody(table);
-  console.log(parent);
   var rows = getRows(table);
-  console.log(rows);
   var header = getHeader(table);//rows[0];
-  console.log(header);
 
   if (rows.length > 1) {
 
@@ -156,20 +152,18 @@ function runRedesignOverzicht(table) {
     }
     console.log('Redesigning');
 
-    var current_date = rows[0].childNodes[2].innerHTML;
+    var current_date = rows[0].querySelectorAll('td')[2].innerHTML;
     var total_hours = 0.0;
     var insertables = [];
 
+    /* Break into blocks of one day */
     for(var i=0; i < rows.length; i++) {
-      console.log(rows[i]);
       var cells = rows[i].querySelectorAll('td');
-      console.log(cells);
       if (cells[2] == undefined || cells[6] == undefined) {return};
       var d = cells[2].innerHTML.split(' ')[1];
-      console.log(d);
       var t = parseFloat(cells[6].innerHTML.split(' ')[1].replace(',', '.'));
-      console.log(t);
 
+      /* Discovered new day, process previous */
       if (d != current_date) {
         var newRow = $('<tr style="line-height:21px; margin-bottom:5px;">' +
                        '<td class="cROW tROW"></td>' +
@@ -200,27 +194,35 @@ function runRedesignOverzicht(table) {
     getFrame().find('.add_hours').click(addHoursToDay);
 
     /* Create collapsable days */
-    rows = getRows(table);
+    rows = getRowsAndHeaders(table);
     var prev_header = 0;
-    for(var i=1; i < rows.length; i++) {
-      if (rows[i].childNodes[3].innerHTML.indexOf('<b>Datum</b>') > -1 || i == rows.length - 1) {
-        rows[prev_header].childNodes[1].classList.add('hidebutton');
+    for(var i=0; i < rows.length; i++) {
+      var cells = rows[i].querySelectorAll('td, th');
+      if (cells.length > 0) {
 
-        rows[prev_header].childNodes[1].innerHTML = '[-]';
+        /* Detect a header or reached the end? Then we've got a full day. Process */
+        if (cells[0].nodeName == 'TH' || i == rows.length - 1) {
+          console.log(prev_header);
+          var cells_header = rows[prev_header].querySelectorAll('th');
+          cells_header[1].classList.add('hidebutton');
 
-        var a = prev_header + 1;
-        var b = i - 2;
-        rows[prev_header].childNodes[1].setAttribute("data-start", a);
-        rows[prev_header].childNodes[1].setAttribute("data-stop", b);
-        rows[prev_header].childNodes[1].onclick = function() {
-          toggleRows(this, rows);
+          cells_header[1].innerHTML = '[-]';
+
+          var a = prev_header + 1;
+          var b = i - 2;
+          cells_header[1].setAttribute("data-start", a);
+          cells_header[1].setAttribute("data-stop", b);
+          cells_header[1].onclick = function() {
+            toggleRows(this, rows);
+          }
+
+          prev_header = i;
         }
-
-        prev_header = i;
       }
     }
   }
 
+  return;
   /* Add quick buttons to select current day, week and month, as well as adding hours for today */
   var frm = getFrame().find('#frm');
   if (frm.find('.clickable').length == 0) {  // Hack to prevent double addition
