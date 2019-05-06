@@ -3,15 +3,17 @@
 // @version  1
 // @author   Jayke Meijer
 // @grant    GM_addStyle
-// @include https://secure*.e-boekhouden.nl/bh/*
+// @include https://secure*.e-boekhouden.nl/*
 // @require http://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js
 // ==/UserScript==
 
 /* ======= Shortcut getters ======= */
 function getFrame() {
+  return $(document);
   var doc = document.getElementById('mainframe');
   if (doc != null) {
-    return $(doc.contentDocument);
+    var frame = doc.contentDocument;
+    return $(frame);
   } else {
     return null;
   }
@@ -21,8 +23,16 @@ function getTableBody(table) {
   return table.children('tbody').children('tr').eq(2).find('table > tbody:contains("Datum")');
 }
 
+function getHeader(table) {
+    return table.children('thead').children('tr');
+}
+
 function getRows(table) {
-  return table.children('tbody').children('tr').eq(2).find('table > tbody:contains("Datum") > tr');
+  console.log('getRows');
+  console.log(table.children('tbody').children('tr'));
+  console.log('---');
+  //return table.children('tbody').children('tr').eq(2).find('table > tbody:contains("Datum") > tr');
+  return table.children('tbody').children('tr');
 }
 
 
@@ -30,6 +40,7 @@ function getRows(table) {
 function checkChanged() {
   var frame = getFrame();
   if (frame == null) {
+    console.log('Frame is null');
     return;
   }
   var hidden = frame.get()[0].getElementById('changedByJayke');
@@ -42,6 +53,7 @@ function checkChanged() {
     frame.find('body').append(element);
 
     /* Add CSS */
+    console.log(frame.find('head').get(0));
     addStyle(frame.find('head').get(0),
            '.tROW {border-bottom: 2px solid #AAAAAA; font-weight: bold; padding-bottom: 20px;} ' +
            '.hidebutton {font-family: "Lucida Console", Monaco, monospace} ' +
@@ -70,25 +82,33 @@ function addStyle(head, css) {
 
 /* Wait for page content to load, then trigger page rebuild */
 function waitForPage() {
+    console.log('wFP');
   var frame = getFrame();
   var center = frame.find('body > center');
+  console.log(frame.find('app-grid'));
 
   // TODO: fix check for Chrome
   var url = frame.context.URL;
-  var ptype = (url.includes('uren_ov.asp') ? 'overzicht' : (url.includes('uren.asp') ? 'toevoegen' : 'unknown'));
+  console.log(url);
+  var ptype = (url.includes('overzicht') ? 'overzicht' : (url.includes('uren.asp') ? 'toevoegen' : 'unknown'));
   if (ptype == 'unknown') {
     return;
   }
 
-  if (center.length == 0 || (ptype == 'overzicht' && center.children('table').length == 0) || (ptype == 'toevoegen' && center.children('form').length == 0)) {
+  console.log(center);
+  console.log(center.children('table'));
+  if (false) {//center.length == 0 || (ptype == 'overzicht' && center.children('table').length == 0) || (ptype == 'toevoegen' && center.children('form').length == 0)) {
     setTimeout(waitForPage, 100);
   } else {
+    //console.log('Page loaded');
+    center = frame.find('app-grid');
     buildPage(ptype, center);
   }
 }
 
 function buildPage(ptype, center) {
-  var table = center.children('table');
+  console.log('bP');
+  var table = $(center.find('table')[0]);//center.children('table');
   var form = center.children('form');
 
   switch(ptype) {
@@ -118,9 +138,13 @@ function runRedesignToevoegen(form) {
 
 /* ======= Perform changes to 'Overzicht' page ======= */
 function runRedesignOverzicht(table) {
+  console.log(table);
   var parent = getTableBody(table);
+  console.log(parent);
   var rows = getRows(table);
-  var header = rows[0];
+  console.log(rows);
+  var header = getHeader(table);//rows[0];
+  console.log(header);
 
   if (rows.length > 1) {
 
@@ -130,15 +154,21 @@ function runRedesignOverzicht(table) {
         setTimeout(function() {runRedesignOverzicht(table)}, 10);
         return;
     }
+    console.log('Redesigning');
 
-    var current_date = rows[1].childNodes[2].innerHTML;
+    var current_date = rows[0].childNodes[2].innerHTML;
     var total_hours = 0.0;
     var insertables = [];
 
-    for(var i=1; i < rows.length; i++) {
-      if (rows[i].childNodes[2] == undefined || rows[i].childNodes[6] == undefined) {return};
-      var d = rows[i].childNodes[2].innerHTML;
-      var t = parseFloat(rows[i].childNodes[6].innerHTML.replace(',', '.'));
+    for(var i=0; i < rows.length; i++) {
+      console.log(rows[i]);
+      var cells = rows[i].querySelectorAll('td');
+      console.log(cells);
+      if (cells[2] == undefined || cells[6] == undefined) {return};
+      var d = cells[2].innerHTML.split(' ')[1];
+      console.log(d);
+      var t = parseFloat(cells[6].innerHTML.split(' ')[1].replace(',', '.'));
+      console.log(t);
 
       if (d != current_date) {
         var newRow = $('<tr style="line-height:21px; margin-bottom:5px;">' +
@@ -333,4 +363,8 @@ function addHoursToDay(element) {
 
 
 /* Start checking */
-setInterval(checkChanged, 100);
+if (window.location.href.includes('overzicht')) {
+    console.log('Correct Frame');
+    console.log(document);
+    setInterval(checkChanged, 1000);
+}
