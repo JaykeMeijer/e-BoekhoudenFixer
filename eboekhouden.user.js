@@ -199,10 +199,8 @@ function runRedesignOverzicht(table) {
     for(var i=0; i < rows.length; i++) {
       var cells = rows[i].querySelectorAll('td, th');
       if (cells.length > 0) {
-
         /* Detect a header or reached the end? Then we've got a full day. Process */
         if (cells[0].nodeName == 'TH' || i == rows.length - 1) {
-          console.log(prev_header);
           var cells_header = rows[prev_header].querySelectorAll('th');
           cells_header[1].classList.add('hidebutton');
 
@@ -222,12 +220,12 @@ function runRedesignOverzicht(table) {
     }
   }
 
-  return;
   /* Add quick buttons to select current day, week and month, as well as adding hours for today */
+  console.log(getFrame());
   var frm = getFrame().find('#frm');
   if (frm.find('.clickable').length == 0) {  // Hack to prevent double addition
     addCurrentButtons();
-    addHoursCurrentDayButton();
+    //addHoursCurrentDayButton();
     addCollapsableSearch();
   }
 }
@@ -238,11 +236,10 @@ function getDateString(d) {
 
 function addCurrentButtons() {
   var frame = getFrame();
-  var frm = frame.find('#frm');
-  frm.children().first().find('table').first().find('tbody > tr').append(
-    '<td class="clickable" id="showtoday">Vandaag</td>' +
-    '<td class="clickable" id="showthisweek">Deze week</td>' +
-    '<td class="clickable" id="showthismonth">Deze maand</td>'
+  frame.find('.form-header-left > h1').append(
+    '| <span class="clickable" id="showtoday">Vandaag</span> | ' +
+    '<span class="clickable" id="showthisweek">Deze week</span> | ' +
+    '<span class="clickable" id="showthismonth">Deze maand</span>'
   );
   frame.find('#showtoday').first().click(showToday);
   frame.find('#showthisweek').first().click(showThisWeek);
@@ -261,13 +258,16 @@ function addHoursCurrentDayButton() {
 }
 
 function addCollapsableSearch() {
-  var frm = getFrame().find('#frm');
-  var elem = $('<td id="hidesearch" class="hidebutton">[+]</td>');
+  var frm = getFrame();
+  var elem = $('<span id="hidesearch" class="hidebutton">[+]</span> | ');
   elem.click(function() {toggleSearch(this);});
-  frm.children().first().find('table').first().find('tbody > tr').prepend(elem);
+  frm.find('.form-header-left > h1').prepend(elem);
 
-  $(frm.find('table > tbody').first().children('tr')[1]).hide();
-  frm.children('table').eq(1).hide();
+  //$(frm.find('table > tbody').first().children('tr')[1]).hide();
+  //frm.children('table').eq(1).hide();
+  frm.find('.form-row').hide();
+  frm.find('.form-row').hide();
+  frm.find('input.button').hide();
 }
 
 /* ======= User-triggered scripts ======= */
@@ -291,26 +291,28 @@ function toggleRows(element, rows) {
 }
 
 function toggleSearch(element) {
-  var frm = getFrame().find('#frm');
+  var frm = getFrame();
   if (element.innerHTML == '[-]') {
     // Hide
     element.innerHTML = '[+]';
-    $(frm.find('table > tbody').first().children('tr')[1]).hide();
-    frm.children('table').eq(1).hide();
+    frm.find('.form-row').hide();
+    frm.find('.form-row').hide();
+    frm.find('input.button').hide();
   } else {
     // Show
     element.innerHTML = '[-]';
-    $(frm.find('table > tbody').first().children('tr')[1]).show();
-    frm.children('table').eq(1).show();
+    frm.find('.form-row').show();
+    frm.find('.form-row').show();
+    frm.find('input.button').show();
   }
 }
 
+/* TODO: Wait until object loaded */
 function showToday() {
   var today = new Date();
   var today_s = getDateString(today);
   selectDateRange(today, today);
 }
-
 
 
 function showThisWeek() {
@@ -326,33 +328,33 @@ function showThisWeek() {
   var sunday = new Date(monday);
   sunday.setDate(sunday.getDate() + 6);
 
-	selectDateRange(monday, sunday);
+  selectDateRange(monday, sunday);
 }
 
 function showThisMonth() {
-  var frm = getFrame().find('#frm');
-  frm.find('input').filter('[value=M]').get()[0].click();
+  var frm = getFrame();
+  frm.find('input').filter('[value=maand]').get()[0].click();
 
   var today = new Date();
   var month = today.getMonth() + 1;
 
-  frm.find('#SelMaand').find('option').filter('[value=' + month + ']').prop('selected', true);
-  frm.find('#submit1').get()[0].click();
+  frm.find('#month').find('option').filter('[value=' + month + ']').prop('selected', true);
+  frm.find('input.button').get()[0].click();
 }
 
 function selectVrije() {
-  var frm = getFrame().find('#frm');
-  frm.find('input').filter('[value=V]').get()[0].click();
+  var frm = getFrame();
+  frm.find('input').filter('[value=vrij]').get()[0].click();
 }
 
 function selectDateRange(from, to) {
   selectVrije();
-  var frm = getFrame().find('#frm');
-  var van = frm.find('#txtDatumVan').first();
-  var tot = frm.find('#txtDatumTot').first();
+  var frm = getFrame();
+  var van = frm.find('#start').first();
+  var tot = frm.find('#end').first();
   van.get()[0].value = getDateString(from);
   tot.get()[0].value = getDateString(to);
-  frm.find('#submit1').get()[0].click();
+  frm.find('input.button').get()[0].click();
 }
 
 function addHoursToDay(element) {
