@@ -225,7 +225,7 @@ function runRedesignOverzicht(table) {
   var frm = getFrame().find('#frm');
   if (frm.find('.clickable').length == 0) {  // Hack to prevent double addition
     addCurrentButtons();
-    //addHoursCurrentDayButton();
+    addHoursCurrentDayButton();
     addCollapsableSearch();
   }
 }
@@ -247,8 +247,8 @@ function addCurrentButtons() {
 }
 
 function addHoursCurrentDayButton() {
-  var frm = getFrame().find('#frm').first();
-  var sib = frm.next().next();
+  var frm = getFrame().find('app-form');
+  var sib = frm.next();
   sib.find('img').first().css('margin-top', '20px');
   var link = sib.get()[0].cloneNode();
   link.setAttribute('id', 'addForToday');
@@ -259,12 +259,10 @@ function addHoursCurrentDayButton() {
 
 function addCollapsableSearch() {
   var frm = getFrame();
-  var elem = $('<span id="hidesearch" class="hidebutton">[+]</span> | ');
+  var elem = $('<span id="hidesearch" class="hidebutton">[+]</span>');
   elem.click(function() {toggleSearch(this);});
   frm.find('.form-header-left > h1').prepend(elem);
 
-  //$(frm.find('table > tbody').first().children('tr')[1]).hide();
-  //frm.children('table').eq(1).hide();
   frm.find('.form-row').hide();
   frm.find('.form-row').hide();
   frm.find('input.button').hide();
